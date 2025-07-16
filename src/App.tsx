@@ -259,6 +259,7 @@ function App() {
           }
         `}
       </style>
+      
       <Layout style={{ minHeight: "100vh" }}>
 
         {/* Main Content */}
@@ -386,7 +387,7 @@ function App() {
                       marginBottom: "20px"
                     }}>
                       <Title level={3} style={{ margin: 0, color: "#333" }}>
-                        📬 Inbox
+                        📬
                         {unreadCount > 0 && (
                           <Badge
                             count={unreadCount}
