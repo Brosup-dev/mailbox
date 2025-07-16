@@ -286,7 +286,7 @@ function App() {
                     <Space.Compact style={{ width: "100%" }}>
                                               <Input
                           size="large"
-                          placeholder="Enter email (e.g., user@nguyenmail.pro)"
+                          placeholder="Enter email"
                           value={userInput}
                           onChange={(e) => setUserInput(e.target.value)}
                           onPressEnter={handleUserSubmit}
@@ -319,20 +319,6 @@ function App() {
                         {loading ? "Loading..." : "Read Mail"}
                       </Button>
                                           </Space.Compact>
-                      
-                      {/* Helper text for allowed domains */}
-                      <div style={{ 
-                        marginTop: "10px", 
-                        textAlign: "center" 
-                      }}>
-                        <Text style={{ 
-                          fontSize: "12px", 
-                          color: "#999",
-                          fontStyle: "italic"
-                        }}>
-                          Allowed domains: nguyenmail.pro, lurvon.com, juboro.com
-                        </Text>
-                      </div>
                     </div>
                 </Card>
 
