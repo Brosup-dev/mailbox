@@ -1,0 +1,102 @@
+@import 'antd/dist/reset.css';
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.app-logo {
+  animation: logo-spin infinite 20s linear;
+}
+
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Custom styles for mail items */
+.mail-item {
+  transition: all 0.3s ease;
+}
+
+.mail-item:hover {
+  background-color: rgba(239, 68, 68, 0.05) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.mail-item.unread {
+  background-color: rgba(239, 68, 68, 0.1) !important;
+  border-left: 3px solid #ef4444 !important;
+}
+
+
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .ant-layout-header {
+    padding: 0 8px !important;
+  }
+  
+  .ant-card {
+    margin-bottom: 8px !important;
+  }
+  
+  .ant-space {
+    gap: 4px !important;
+  }
+
+  /* Hide sidebars on mobile */
+  .ant-layout-content > div > div:first-child,
+  .ant-layout-content > div > div:last-child {
+    display: none !important;
+  }
+
+  /* Full width for main content on mobile */
+  .ant-layout-content > div {
+    max-width: 100% !important;
+    flex-direction: column !important;
+  }
+
+  .ant-layout-content > div > div:nth-child(2) {
+    flex: 1 !important;
+    min-width: 0 !important;
+  }
+}
+
+.mail-dialog .ant-modal-content {
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+/* Dark theme overrides */
+[data-theme="dark"] .mail-item:hover {
+  background-color: #2a2a2a;
+}
+
+[data-theme="dark"] .mail-item.unread {
+  background-color: #1a3a4a;
+  border-left: 3px solid #1890ff;
+}
+
+/* Logo styles */
+.app-logo {
+  height: 32px;
+  width: 32px;
+  object-fit: contain;
+}
+
+
