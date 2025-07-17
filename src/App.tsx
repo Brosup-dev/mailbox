@@ -64,21 +64,19 @@ function App() {
   // };
 
 
-  // Allowed domains
   const ALLOWED_DOMAINS = ['nguyenmail.pro', 'lurvon.com', 'juboro.com'];
 
   const validateEmail = (email: string): { isValid: boolean; message: string } => {
-    // Check if email is empty
+
     if (!email.trim()) {
       return { isValid: false, message: "Please enter an email address" };
     }
 
-    // Check if email contains @
+  
     if (!email.includes('@')) {
       return { isValid: false, message: "Email must contain @ symbol" };
     }
 
-    // Split email into username and domain
     const parts = email.split('@');
     if (parts.length !== 2) {
       return { isValid: false, message: "Invalid email format" };
@@ -86,12 +84,12 @@ function App() {
 
     const [username, domain] = parts;
     
-    // Check if username is empty
+   
     if (!username.trim()) {
       return { isValid: false, message: "Username cannot be empty" };
     }
 
-    // Check if domain is empty
+   
     if (!domain.trim()) {
       return { isValid: false, message: "Domain cannot be empty" };
     }
@@ -100,7 +98,7 @@ function App() {
     if (!ALLOWED_DOMAINS.includes(domain)) {
       return { 
         isValid: false, 
-        message: `Invalid domain. Allowed: ${ALLOWED_DOMAINS.join(', ')}` 
+        message: `Invalid domain.` 
       };
     }
 
