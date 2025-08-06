@@ -27,7 +27,7 @@ import axios from "axios";
 const { Title, Text, Paragraph } = Typography;
 
 // API Configuration
-const API_BASE_URL = "https://temp-mail-jk9q.onrender.com";
+const API_BASE_URL = "https://temp-mail.brosupdigital.com";
 
 
 function App() {
