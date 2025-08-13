@@ -64,7 +64,7 @@ function App() {
   // };
 
 
-  const ALLOWED_DOMAINS = ['nguyenmail.pro', 'lurvon.com', 'juboro.com'];
+  const ALLOWED_DOMAINS = ['nguyenmail.pro', 'lurvon.com', 'juboro.com', 'brosup.dev'];
 
   const validateEmail = (email: string): { isValid: boolean; message: string } => {
 
