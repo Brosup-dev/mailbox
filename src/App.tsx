@@ -16,6 +16,7 @@ import {
   Tooltip,
   Alert,
   Input,
+  Skeleton,
 } from "antd";
 import {
   MailOutlined,
@@ -28,6 +29,35 @@ const { Title, Text, Paragraph } = Typography;
 
 // API Configuration
 const API_BASE_URL = "https://temp-mail.brosupdigital.com";
+// const API_BASE_URL = "http://127.0.0.1:8000";
+
+
+function checkAndClearSessionCookie() {
+  // console.log("Checking PHPSESSID cookie...");
+  const sessionId = document.cookie
+          .split('; ')
+          .find(row => row.startsWith('PHPSESSID='))
+          ?.split('=')[1];
+
+  const lastSession = localStorage.getItem("lastSessionId");
+  const lastUpdate = localStorage.getItem("lastSessionUpdate");
+
+  const now = Date.now();
+
+  if (sessionId) {
+    if (sessionId !== lastSession) {
+      // Nếu cookie đổi, cập nhật
+      localStorage.setItem("lastSessionId", sessionId);
+      localStorage.setItem("lastSessionUpdate", now.toString());
+    } else if (lastUpdate && now - Number(lastUpdate) > 60 * 60 * 1000) {
+      // Nếu cookie không đổi quá 1 giờ => xóa
+      document.cookie = "PHPSESSID=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+      localStorage.removeItem("lastSessionId");
+      localStorage.removeItem("lastSessionUpdate");
+      // console.log("PHPSESSID cookie cleared after 60 minutes of inactivity.");
+    }
+  }
+}
 
 
 function App() {
@@ -64,7 +94,25 @@ function App() {
   // };
 
 
-  const ALLOWED_DOMAINS = ['nguyenmail.pro', 'lurvon.com', 'juboro.com', 'brosup.dev'];
+  const ALLOWED_DOMAINS = [
+    'nguyenmail.pro', 
+    'lurvon.com', 
+    'juboro.com', 
+    'brosup.dev',
+    "sharklasers.com",
+    "guerrillamail.info",
+    "grr.la",
+    "guerrillamail.biz",
+    "guerrillamail.com",
+    "guerrillamail.de",
+    "guerrillamail.net",
+    "guerrillamail.org",
+    "guerrillamailblock.com",
+    "pokemail.net",
+    "spam4.me"
+  ];
+  // Kiểm tra và xóa cookie PHPSESSID nếu cần mỗi 5 phút
+  setInterval(checkAndClearSessionCookie, 5 * 60 * 1000);
 
   const validateEmail = (email: string): { isValid: boolean; message: string } => {
 
@@ -132,10 +180,44 @@ function App() {
     }
   };
 
-  const openMail = (mail: any) => {
-    setSelectedMail(mail);
-    setIsModalOpen(true);
-  };
+const openMail = async (mail: any, uid: any) => {
+  setSelectedMail(mail);
+  setIsModalOpen(true);
+
+  if (!["@nguyenmail.pro", "@brosup.dev", "@juboro.com", "@lurvon.com"].includes(userInput.slice(userInput.indexOf('@'))) 
+      && uid !== null && uid !== undefined) {
+    try {
+      // lay cookies PHPSESSID
+      const phpsessid = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('PHPSESSID='))
+        ?.split('=')[1];
+      if (phpsessid === undefined) {
+        const response = await axios.post(`${API_BASE_URL}/create-guerrilla`, {
+          f: "set_email_user",
+          email_user: userInput,
+          lang: "en",
+          ip: "127.0.0.1",
+          agent: "Mozilla"
+        });
+        if (response.data.session_id) {
+          document.cookie = `PHPSESSID=${response.data.session_id}; path=/`;
+        }
+      }
+      const res = await axios.get(`${API_BASE_URL}/read-guerrilla-email/${uid}?session_id=${phpsessid}`);
+      const data = res.data;
+
+      // Cập nhật body của mail đã chọn
+      setSelectedMail((prev: any) => ({
+      ...prev!,
+      body: data.body
+    }));
+
+    } catch (error) {
+      console.error("Lỗi khi đọc email:", error);
+    }
+  }
+};
 
   const handleModalCancel = () => {
     setIsModalOpen(false);
@@ -161,17 +243,53 @@ function App() {
 
   const fetchEmails = async (user: string) => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/read-email`, {
-        params: { user},
-      });
+      let response;
+      if (["@nguyenmail.pro", "@lurvon.com", "@juboro.com", "@brosup.dev"].includes(user.slice(user.indexOf('@')))) {
+        response = await axios.get(`${API_BASE_URL}/read-email`, {
+          params: { user },
+        });
+      }else {
+        // lay userinput tu cookies
+        const userFromCookie = document.cookie
+          .split('; ')
+          .find(row => row.startsWith('user='))
+          ?.split('=')[1];
+        if (userFromCookie) {
+          user = decodeURIComponent(userFromCookie);
+        }
 
-      if (response.data.data && Array.isArray(response.data.data)) {
-        setMails(response.data.data);
+        if (userFromCookie !== encodeURIComponent(user)) {
+          // console.log("User has changed. Creating new session...");
+          document.cookie = `user=${encodeURIComponent(user)}; path=/`;
+                // Gọi API tạo hoặc lấy session_id
+
+          response = await axios.post(`${API_BASE_URL}/create-guerrilla`, {
+          f: "set_email_user",
+          email_user: user,
+          lang: "en",
+          ip: "127.0.0.1",
+          agent: "Mozilla"
+        });
+        if (response.data.session_id) {
+          document.cookie = `PHPSESSID=${response.data.session_id}; path=/`;
+        }
+        }
+
+       const phpsessid = document.cookie
+          .split('; ')
+          .find(row => row.startsWith('PHPSESSID='))
+          ?.split('=')[1];
+        // console.log('Using PHPSESSID:', phpsessid);
+        response = await axios.get(`${API_BASE_URL}/get-guerrilla-emails?session_id=${phpsessid}&page=1&limit=8`);
+      }
+
+      if (response.data.emails && Array.isArray(response.data.emails)) {
+        setMails(response.data.emails);
         setTotalPages(1);
         setUnreadCount(
-          response.data.data.filter((mail: any) => !mail.read).length
+          response.data.emails.filter((mail: any) => !mail.read).length
         );
-        showNotification("success", `Loaded ${response.data.data.length} emails`);
+        showNotification("success", `Loaded ${response.data.emails.length} emails`);
       } else {
         setMails([]);
         setTotalPages(1);
@@ -397,7 +515,7 @@ function App() {
                       renderItem={(mail) => (
                         <List.Item
                           className={`mail-item ${!mail.read ? "unread" : ""}`}
-                          onClick={() => openMail(mail)}
+                          onClick={() => openMail(mail, mail.uid)}
                           style={{
                             padding: "16px",
                             borderRadius: "12px",
@@ -514,8 +632,8 @@ function App() {
       <div>
                     <Text strong>Date:</Text>
                     <Text style={{ marginLeft: "8px" }}>
-                      {selectedMail.date
-                        ? new Date(selectedMail.date).toLocaleString("vi-VN", {
+                      {selectedMail.parsed_date
+                        ? new Date(selectedMail.parsed_date).toLocaleString("vi-VN", {
                             hour12: false,
                           })
                         : ""}
@@ -533,7 +651,11 @@ function App() {
                 />
               ) : (
                 <Paragraph style={{ whiteSpace: "pre-wrap", fontSize: "14px" }}>
-                  {selectedMail.body}
+                  {selectedMail.body !== null ? (
+                    selectedMail.body
+                  ):(
+                     <Skeleton active paragraph={{ rows: 5}} />
+                  )}
                 </Paragraph>
               )}
       </div>
