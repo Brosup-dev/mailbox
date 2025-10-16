@@ -1,4 +1,4 @@
-import { useState} from "react";
+import { useEffect, useState} from "react";
 import DOMPurify from "dompurify";
 import {
   Layout,
@@ -28,8 +28,8 @@ import axios from "axios";
 const { Title, Text, Paragraph } = Typography;
 
 // API Configuration
-const API_BASE_URL = "https://temp-mail.brosupdigital.com";
-// const API_BASE_URL = "http://127.0.0.1:8000";
+// const API_BASE_URL = "https://temp-mail.brosupdigital.com";
+const API_BASE_URL = "http://127.0.0.1:8080";
 
 
 function checkAndClearSessionCookie() {
@@ -75,9 +75,9 @@ function App() {
   // const [isDark, setIsDark] = useState(getThemeMode());
 
   // Theme effect
-  // useEffect(() => {
-  //   saveThemeMode(isDark);
-  // }, [isDark]);
+  useEffect(() => {
+    console.log("User input changed:", userInput);
+  }, [userInput]);
 
 
 
@@ -244,24 +244,14 @@ const openMail = async (mail: any, uid: any) => {
   const fetchEmails = async (user: string) => {
     try {
       let response;
-      if (["@nguyenmail.pro", "@lurvon.com", "@juboro.com", "@brosup.dev"].includes(user.slice(user.indexOf('@')))) {
+      if (["@nguyenmail.pro", "@lurvon.com", "@juboro.com", "@brosup.dev"].includes(userInput.slice(userInput.indexOf('@')))) {
         response = await axios.get(`${API_BASE_URL}/read-email`, {
           params: { user },
         });
       }else {
-        // lay userinput tu cookies
-        const userFromCookie = document.cookie
-          .split('; ')
-          .find(row => row.startsWith('user='))
-          ?.split('=')[1];
-        if (userFromCookie) {
-          user = decodeURIComponent(userFromCookie);
-        }
-
-        if (userFromCookie !== encodeURIComponent(user)) {
+       
+        let phpsessid;
           // console.log("User has changed. Creating new session...");
-          document.cookie = `user=${encodeURIComponent(user)}; path=/`;
-                // Gọi API tạo hoặc lấy session_id
 
           response = await axios.post(`${API_BASE_URL}/create-guerrilla`, {
           f: "set_email_user",
@@ -272,13 +262,12 @@ const openMail = async (mail: any, uid: any) => {
         });
         if (response.data.session_id) {
           document.cookie = `PHPSESSID=${response.data.session_id}; path=/`;
-        }
+          phpsessid = response.data.session_id;
         }
 
-       const phpsessid = document.cookie
-          .split('; ')
-          .find(row => row.startsWith('PHPSESSID='))
-          ?.split('=')[1];
+        if (!phpsessid) {
+          throw new Error("Failed to obtain session ID");
+        }
         // console.log('Using PHPSESSID:', phpsessid);
         response = await axios.get(`${API_BASE_URL}/get-guerrilla-emails?session_id=${phpsessid}&page=1&limit=8`);
       }
@@ -314,6 +303,7 @@ const openMail = async (mail: any, uid: any) => {
 
   const isHTML = (str: string) => {
     const htmlRegex = /<[a-z][\s\S]*>/i;
+    console.log("isHTML check:", htmlRegex.test(str));
     return htmlRegex.test(str);
   };
 
@@ -544,8 +534,8 @@ const openMail = async (mail: any, uid: any) => {
                               </div>
                               <Space direction="vertical" size="small" style={{ alignItems: "flex-end" }}>
                                 <Text style={{ color: "#999", fontSize: "12px" }}>
-                                  {mail.date
-                                    ? new Date(mail.date).toLocaleString("vi-VN", {
+                                  {mail.parsed_date
+                                    ? new Date(mail.parsed_date).toLocaleString("vi-VN", {
                                         hour12: false,
                                       })
                                     : ""}
@@ -646,7 +636,12 @@ const openMail = async (mail: any, uid: any) => {
                 <div
                   style={{ fontSize: "14px" }}
                   dangerouslySetInnerHTML={{
-                    __html: DOMPurify.sanitize(selectedMail.body || ""),
+    __html: DOMPurify.sanitize(
+      (selectedMail.body || "").replace(
+        /<a([^>]*)><\/a>/g,
+        '<a$1>[Link]</a>'
+      )
+    ),
                   }}
                 />
               ) : (
