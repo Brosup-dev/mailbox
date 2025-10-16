@@ -153,6 +153,8 @@ function App() {
     return { isValid: true, message: "" };
   };
 
+
+
   const handleUserSubmit = async () => {
     if (!userInput.trim()) {
       showNotification("error", "Please enter an email address");
@@ -306,6 +308,26 @@ const openMail = async (mail: any, uid: any) => {
     console.log("isHTML check:", htmlRegex.test(str));
     return htmlRegex.test(str);
   };
+
+  const processedBody = (selectedMail?.body || "").replace(
+  /<a([^>]*)href="([^"]+)"([^>]*)><\/a>/gi,
+  (match: any, before: any, href: string, after: any) => {
+    const cleanUrl = href.split("?")[0];
+    console.log("match:", match);
+    console.log("href:", href);
+    console.log("cleanUrl:", cleanUrl);
+    return `<a${before}href="${href}"${after} 
+     style="
+        display:inline-block;
+        max-width:400px;
+        white-space:nowrap;
+        overflow:hidden;
+        text-overflow:ellipsis;
+      "
+      title="${href}"
+    >${cleanUrl}</a>`;
+  }
+);
 
   const extractCodes = (mail: any): string => {
     const codePatterns = /\b\d{6}\b|\b\d{8}\b/g
@@ -634,15 +656,17 @@ const openMail = async (mail: any, uid: any) => {
               <Divider />
               {isHTML(selectedMail.body) ? (
                 <div
-                  style={{ fontSize: "14px" }}
-                  dangerouslySetInnerHTML={{
-    __html: DOMPurify.sanitize(
-      (selectedMail.body || "").replace(
-        /<a([^>]*)><\/a>/g,
-        '<a$1>[Link]</a>'
-      )
-    ),
-                  }}
+                  style={{
+      fontSize: "14px",
+      maxHeight: "60vh",  
+      overflowY: "auto",   
+      wordBreak: "break-all",  
+      whiteSpace: "normal",  
+      overflowWrap: "break-word"  
+    }}
+                   dangerouslySetInnerHTML={{
+                __html: DOMPurify.sanitize(processedBody),
+              }}
                 />
               ) : (
                 <Paragraph style={{ whiteSpace: "pre-wrap", fontSize: "14px" }}>
