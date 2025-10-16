@@ -32,33 +32,6 @@ const API_BASE_URL = "https://temp-mail.brosupdigital.com";
 // const API_BASE_URL = "http://127.0.0.1:8080";
 
 
-function checkAndClearSessionCookie() {
-  // console.log("Checking PHPSESSID cookie...");
-  const sessionId = document.cookie
-          .split('; ')
-          .find(row => row.startsWith('PHPSESSID='))
-          ?.split('=')[1];
-
-  const lastSession = localStorage.getItem("lastSessionId");
-  const lastUpdate = localStorage.getItem("lastSessionUpdate");
-
-  const now = Date.now();
-
-  if (sessionId) {
-    if (sessionId !== lastSession) {
-      // Nếu cookie đổi, cập nhật
-      localStorage.setItem("lastSessionId", sessionId);
-      localStorage.setItem("lastSessionUpdate", now.toString());
-    } else if (lastUpdate && now - Number(lastUpdate) > 60 * 60 * 1000) {
-      // Nếu cookie không đổi quá 1 giờ => xóa
-      document.cookie = "PHPSESSID=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-      localStorage.removeItem("lastSessionId");
-      localStorage.removeItem("lastSessionUpdate");
-      // console.log("PHPSESSID cookie cleared after 60 minutes of inactivity.");
-    }
-  }
-}
-
 
 function App() {
   const [userInput, setUserInput] = useState("");
@@ -75,9 +48,9 @@ function App() {
   // const [isDark, setIsDark] = useState(getThemeMode());
 
   // Theme effect
-  useEffect(() => {
-    console.log("User input changed:", userInput);
-  }, [userInput]);
+  // useEffect(() => {
+  //   console.log("User input changed:", userInput);
+  // }, [userInput]);
 
 
 
@@ -111,8 +84,7 @@ function App() {
     "pokemail.net",
     "spam4.me"
   ];
-  // Kiểm tra và xóa cookie PHPSESSID nếu cần mỗi 5 phút
-  setInterval(checkAndClearSessionCookie, 5 * 60 * 1000);
+
 
   const validateEmail = (email: string): { isValid: boolean; message: string } => {
 
@@ -216,7 +188,7 @@ const openMail = async (mail: any, uid: any) => {
     }));
 
     } catch (error) {
-      console.error("Lỗi khi đọc email:", error);
+      console.error("Error fetching email body:", error);
     }
   }
 };
@@ -305,17 +277,17 @@ const openMail = async (mail: any, uid: any) => {
 
   const isHTML = (str: string) => {
     const htmlRegex = /<[a-z][\s\S]*>/i;
-    console.log("isHTML check:", htmlRegex.test(str));
+    // console.log("isHTML check:", htmlRegex.test(str));
     return htmlRegex.test(str);
   };
 
   const processedBody = (selectedMail?.body || "").replace(
   /<a([^>]*)href="([^"]+)"([^>]*)><\/a>/gi,
-  (match: any, before: any, href: string, after: any) => {
+  (_match: any, before: any, href: string, after: any) => {
     const cleanUrl = href.split("?")[0];
-    console.log("match:", match);
-    console.log("href:", href);
-    console.log("cleanUrl:", cleanUrl);
+    // console.log("match:", match);
+    // console.log("href:", href);
+    // console.log("cleanUrl:", cleanUrl);
     return `<a${before}href="${href}"${after} 
      style="
         display:inline-block;
